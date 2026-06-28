@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Shield, Radio, Terminal, Compass, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
@@ -106,7 +104,7 @@ export default function MissionTransmissions({ onSubscriptionSuccess }: MissionT
               <button
                 type="submit"
                 disabled={loading}
-                className="relative overflow-hidden bg-cyber-cyan text-black px-8 py-3.5 text-xs font-bold uppercase tracking-[0.2em] transition-all hover:brightness-110 active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 min-w-[180px] cursor-pointer"
+                className="relative overflow-hidden bg-cyber-cyan text-black px-8 py-3.5 text-xs font-bold uppercase tracking-[0.2em] transition-all hover:brightness-110 active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 min-min-w-[180px]"
               >
                 {loading ? (
                   <>

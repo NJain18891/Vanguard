@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { TelemetryState } from "../types";
@@ -31,7 +29,7 @@ export default function TelemetryDesk({ telemetry: initialTelemetry, loading, on
   const [telemetry, setTelemetry] = useState<TelemetryState | null>(initialTelemetry);
   const radarCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(false);
-  const [activeTab, setActiveTab] = useState<"VECTORS" | "DIAGNOSTICS">("VECTORS");
+  const [activeTab, setActiveTab] = useState<"VECTORS" | "COGNITION" | "DIAGNOSTICS">("VECTORS");
 
   // Local effect to sync props
   useEffect(() => {
@@ -43,6 +41,7 @@ export default function TelemetryDesk({ telemetry: initialTelemetry, loading, on
   // Handle subtle telemetry sound pitch on warning
   useEffect(() => {
     if (!soundEnabled || !telemetry) return;
+    // Create soft sine oscillator simulating premium cockpit relays
     try {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioCtx) return;
@@ -52,12 +51,13 @@ export default function TelemetryDesk({ telemetry: initialTelemetry, loading, on
       const gain = ctx.createGain();
       
       osc.type = "sine";
+      // Adjust frequency based on flight conditions
       if (telemetry.cruisingState === "WARP") {
-        osc.frequency.setValueAtTime(440, ctx.currentTime);
+        osc.frequency.setValueAtTime(440, ctx.currentTime); // Standard hum
       } else if (telemetry.cruisingState === "HAZARD_WARN") {
-        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.setValueAtTime(880, ctx.currentTime); // Alert chime
       } else {
-        osc.frequency.setValueAtTime(220, ctx.currentTime);
+        osc.frequency.setValueAtTime(220, ctx.currentTime); // Sleepy idle hum
       }
       
       gain.gain.setValueAtTime(0.005, ctx.currentTime);
@@ -72,7 +72,7 @@ export default function TelemetryDesk({ telemetry: initialTelemetry, loading, on
     }
   }, [telemetry?.cruisingState, telemetry?.solDistance, soundEnabled]);
 
-  // Render radar scanning sweeper
+  // Render highly advanced animated radar scanning sweeper
   useEffect(() => {
     const canvas = radarCanvasRef.current;
     if (!canvas) return;
@@ -187,6 +187,7 @@ export default function TelemetryDesk({ telemetry: initialTelemetry, loading, on
           }
 
           if (telemetry?.cruisingState === "HAZARD_WARN") {
+            // Intense emergency red glow
             ctx.beginPath();
             ctx.arc(tx, ty, tgt.size * 2, 0, Math.PI * 2);
             ctx.fillStyle = `rgba(239, 68, 68, ${intensity * 0.45})`;
@@ -199,6 +200,7 @@ export default function TelemetryDesk({ telemetry: initialTelemetry, loading, on
             
             ctx.fillStyle = `rgba(239, 68, 68, ${Math.max(0.3, intensity)})`;
           } else {
+            // Standard Cyan alignment
             ctx.beginPath();
             ctx.arc(tx, ty, tgt.size * 2.5, 0, Math.PI * 2);
             ctx.fillStyle = `rgba(0, 242, 254, ${intensity * 0.35})`;
@@ -400,6 +402,7 @@ export default function TelemetryDesk({ telemetry: initialTelemetry, loading, on
                     <span className="font-mono text-[9px] text-amber-300 uppercase">NOMINAL</span>
                   </div>
                   <div className="mt-3.5 h-[2px] bg-white/5 relative overflow-hidden">
+                    {/* Stability indicator bar */}
                     <div 
                       className="absolute top-0 left-0 bottom-0 bg-nova-purple transition-all duration-500"
                       style={{ width: telemetry ? `${telemetry.engineStability}%` : "99.8%" }}

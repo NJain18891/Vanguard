@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { TelemetryState, MissionLog, Subscriber } from "../types";
@@ -28,7 +26,9 @@ interface AdminMissionControlProps {
 export default function AdminMissionControl({ telemetry, onTelemetryUpdate, logs, onRefreshLogs }: AdminMissionControlProps) {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loadingSubs, setLoadingSubs] = useState(false);
+  const [subMessage, setSubMessage] = useState("");
   
+  // Custom manual console log entry state
   const [manualLog, setManualLog] = useState("");
   const [manualLogType, setManualLogType] = useState("INFO");
   const [submittingLog, setSubmittingLog] = useState(false);
@@ -37,7 +37,7 @@ export default function AdminMissionControl({ telemetry, onTelemetryUpdate, logs
   const fetchSubscribers = async () => {
     setLoadingSubs(true);
     try {
-      const resp = await fetch("/api/subscribe"); // In next.js, GET /api/subscribe returns the list
+      const resp = await fetch("/api/subscribers");
       if (resp.ok) {
         const data = await resp.json();
         setSubscribers(data);
@@ -51,9 +51,9 @@ export default function AdminMissionControl({ telemetry, onTelemetryUpdate, logs
 
   useEffect(() => {
     fetchSubscribers();
-  }, [logs]);
+  }, [logs]); // Refresh when logs change as subscription creates a log
 
-  // Push cruising state adjustment
+  // Push new cruising state adjustment into core Express backend
   const handleCruiseChange = async (state: string) => {
     try {
       const resp = await fetch("/api/telemetry/update", {
@@ -91,7 +91,7 @@ export default function AdminMissionControl({ telemetry, onTelemetryUpdate, logs
     }
   };
 
-  // Delete registered node coordinates
+  // Delete registered node coordinates from mongo or fallback backup
   const handleDeleteSubscriber = async (email: string) => {
     if (!confirm(`Confirm revocation of telemetry uplink for coordinate: ${email}`)) return;
     try {
@@ -100,7 +100,7 @@ export default function AdminMissionControl({ telemetry, onTelemetryUpdate, logs
       });
       if (resp.ok) {
         setSubscribers(prev => prev.filter(s => s.email !== email));
-        onRefreshLogs();
+        onRefreshLogs(); // Refreshes console reports indicating withdrawal
       } else {
         alert("Failed to revoke coordinate.");
       }
@@ -174,12 +174,12 @@ export default function AdminMissionControl({ telemetry, onTelemetryUpdate, logs
                   { id: "NOMINAL", label: "STANDARD NOMINAL", style: "border-cyber-cyan/30 text-cyber-cyan hover:bg-cyber-cyan/5" },
                   { id: "WARP", label: "COMMIT ALCUBIERRE WARP", style: "border-nova-purple/40 text-nova-purple hover:bg-nova-purple/5" },
                   { id: "HAZARD_WARN", label: "LOCK HAZARD WARNINGS", style: "border-hazard-red/40 text-hazard-red hover:bg-hazard-red/5" },
-                  { id: "DEEP_DOCK", label: "ALIGN OMEGA PORT", style: "border-hazard-gold/40 text-hazard-gold hover:bg-hazard-gold/5" }
+                  { id: "DEEP_DOCK", label: "ALICN OMEGA PORT", style: "border-hazard-gold/40 text-hazard-gold hover:bg-hazard-gold/5" }
                 ].map((item) => (
                   <button
                     key={item.id}
                     onClick={() => handleCruiseChange(item.id)}
-                    className={`border p-3.5 font-mono text-[9px] uppercase tracking-wider text-center transition-all cursor-pointer ${
+                    className={`border p-3.5 font-mono text-[9px] uppercase tracking-wider text-center transition-all ${
                       telemetry?.cruisingState === item.id 
                         ? "bg-slate-200 text-black font-bold border-white" 
                         : item.style
@@ -203,14 +203,14 @@ export default function AdminMissionControl({ telemetry, onTelemetryUpdate, logs
                   <div className="flex items-center gap-3">
                     <button 
                       onClick={() => handleFleetAdjustment(-1, "activeFleet")} 
-                      className="w-7 h-7 bg-white/5 hover:bg-white/10 border border-white/10 grid place-items-center active:bg-white/20 cursor-pointer"
+                      className="w-7 h-7 bg-white/5 hover:bg-white/10 border border-white/10 grid place-items-center active:bg-white/20"
                     >
                       -
                     </button>
                     <span className="font-bold text-white w-6 text-center">{telemetry?.activeFleet ?? 14}</span>
                     <button 
                       onClick={() => handleFleetAdjustment(1, "activeFleet")} 
-                      className="w-7 h-7 bg-white/5 hover:bg-white/10 border border-white/10 grid place-items-center active:bg-white/20 cursor-pointer"
+                      className="w-7 h-7 bg-white/5 hover:bg-white/10 border border-white/10 grid place-items-center active:bg-white/20"
                     >
                       +
                     </button>
@@ -222,14 +222,14 @@ export default function AdminMissionControl({ telemetry, onTelemetryUpdate, logs
                   <div className="flex items-center gap-3">
                     <button 
                       onClick={() => handleFleetAdjustment(-1, "fleetInTransfer")} 
-                      className="w-7 h-7 bg-white/5 hover:bg-white/10 border border-white/10 grid place-items-center active:bg-white/20 cursor-pointer"
+                      className="w-7 h-7 bg-white/5 hover:bg-white/10 border border-white/10 grid place-items-center active:bg-white/20"
                     >
                       -
                     </button>
                     <span className="font-bold text-white w-6 text-center">{telemetry?.fleetInTransfer ?? 3}</span>
                     <button 
                       onClick={() => handleFleetAdjustment(1, "fleetInTransfer")} 
-                      className="w-7 h-7 bg-white/5 hover:bg-white/10 border border-white/10 grid place-items-center active:bg-white/20 cursor-pointer"
+                      className="w-7 h-7 bg-white/5 hover:bg-white/10 border border-white/10 grid place-items-center active:bg-white/20"
                     >
                       +
                     </button>
@@ -247,42 +247,7 @@ export default function AdminMissionControl({ telemetry, onTelemetryUpdate, logs
                 INJECT CORE TERMINAL COMMANDS
               </span>
               
-              <form onSubmit={handleSubmitLog} className="space-y-4 font-mono text-[11px] uppercase">
-                <div>
-                  <label className="text-slate-500 block mb-1.5">LOG CATEGORY FIELD</label>
-                  <select
-                    value={manualLogType}
-                    onChange={(e) => setManualLogType(e.target.value)}
-                    className="w-full bg-space-card text-white border border-white/10 p-3 focus:border-cyber-cyan/40 focus:outline-none"
-                  >
-                    <option value="INFO">INFORMATION LAYER</option>
-                    <option value="TELEMETRY">COCKPIT SENSORS</option>
-                    <option value="SYSTEM">PROPULSION FUSION</option>
-                    <option value="SECURITY">TETHER PROTECTION</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-slate-500 block mb-1.5">HANDCRAFTED COMMAND MESSAGE</label>
-                  <textarea
-                    value={manualLog}
-                    onChange={(e) => setManualLog(e.target.value)}
-                    placeholder="ENTER BRIDGE LOG TEXT HERE..."
-                    rows={3}
-                    required
-                    className="w-full bg-space-card text-white placeholder:text-slate-600 border border-white/10 p-3 focus:border-cyber-cyan/40 focus:outline-none transition-all duration-300 resize-none"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={submittingLog || !manualLog.trim()}
-                  className="w-full bg-cyber-cyan text-black py-3.5 font-bold uppercase tracking-widest text-xs transition hover:brightness-110 disabled:opacity-55 active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Transmit Log Entry</span>
-                </button>
-              </form>
+              <FormTerm manualLog={manualLog} setManualLog={setManualLog} manualLogType={manualLogType} setManualLogType={setManualLogType} submittingLog={submittingLog} handleSubmitLog={handleSubmitLog} />
             </div>
 
             <div className="mt-6 pt-4 border-t border-white/5 bg-black/30 p-3.5 font-mono text-[9px] leading-relaxed uppercase text-slate-500">
@@ -297,7 +262,7 @@ export default function AdminMissionControl({ telemetry, onTelemetryUpdate, logs
               <button 
                 onClick={fetchSubscribers} 
                 disabled={loadingSubs}
-                className="p-1.5 border border-white/10 text-slate-400 hover:text-white transition disabled:opacity-50 cursor-pointer"
+                className="p-1.5 border border-white/10 text-slate-400 hover:text-white transition disabled:opacity-50"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loadingSubs ? 'animate-spin' : ''}`} />
               </button>
@@ -318,12 +283,12 @@ export default function AdminMissionControl({ telemetry, onTelemetryUpdate, logs
                   <div className="font-mono text-[9px] text-slate-500 py-8 text-center">SYNCHRONIZING RECIPIENT CORE METADATA...</div>
                 ) : subscribers.length === 0 ? (
                   <div className="p-8 text-center">
-                    <span className="font-mono text-[9px] text-slate-600 block mb-1">NO DEEP RECIPIENTS FOUND</span>
+                    <span className="font-mono text-[9px] text-slate-600 block mb-1">NO DEEP RECIDIENTS FOUND</span>
                     <p className="text-[10px] text-slate-500 uppercase leading-relaxed font-mono">LINK AN ADDR COORD VESTIBULE CARD DOWN BELOW</p>
                   </div>
                 ) : (
                   <AnimatePresence>
-                    {subscribers.map((sub) => (
+                    {subscribers.map((sub, idx) => (
                       <motion.div
                         key={sub.email}
                         initial={{ opacity: 0, x: -10 }}
@@ -340,7 +305,7 @@ export default function AdminMissionControl({ telemetry, onTelemetryUpdate, logs
                         </div>
                         <button
                           onClick={() => handleDeleteSubscriber(sub.email)}
-                          className="p-2 border border-white/5 hover:border-hazard-red text-slate-500 hover:text-hazard-red hover:bg-hazard-red/5 transition-all cursor-pointer"
+                          className="p-2 border border-white/5 hover:border-hazard-red text-slate-500 hover:text-hazard-red hover:bg-hazard-red/5 transition-all"
                           title="Revoke Telemetry Uplink"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -361,5 +326,61 @@ export default function AdminMissionControl({ telemetry, onTelemetryUpdate, logs
         </div>
       </div>
     </section>
+  );
+}
+
+// Inner terminal form to avoid bundle pollution
+function FormTerm({
+  manualLog,
+  setManualLog,
+  manualLogType,
+  setManualLogType,
+  submittingLog,
+  handleSubmitLog
+}: {
+  manualLog: string;
+  setManualLog: (s: string) => void;
+  manualLogType: string;
+  setManualLogType: (s: string) => void;
+  submittingLog: boolean;
+  handleSubmitLog: (e: React.FormEvent) => void;
+}) {
+  return (
+    <form onSubmit={handleSubmitLog} className="space-y-4 font-mono text-[11px] uppercase">
+      <div>
+        <label className="text-slate-500 block mb-1.5">LOG CATEGORY FIELD</label>
+        <select
+          value={manualLogType}
+          onChange={(e) => setManualLogType(e.target.value)}
+          className="w-full bg-space-card text-white border border-white/10 p-3 focus:border-cyber-cyan/40 focus:outline-none"
+        >
+          <option value="INFO">INFORMATION LAYER</option>
+          <option value="TELEMETRY">COCKPIT SENSORS</option>
+          <option value="SYSTEM">PROPULSION FUSION</option>
+          <option value="SECURITY">TETHER PROTECTION</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="text-slate-500 block mb-1.5">HANDCRAFTED COMMAND MESSAGE</label>
+        <textarea
+          value={manualLog}
+          onChange={(e) => setManualLog(e.target.value)}
+          placeholder="ENTER BRIDGE LOG TEXT HERE..."
+          rows={3}
+          required
+          className="w-full bg-space-card text-white placeholder:text-slate-600 border border-white/10 p-3 focus:border-cyber-cyan/40 focus:outline-none transition-all duration-300 resize-none"
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={submittingLog || !manualLog.trim()}
+        className="w-full bg-cyber-cyan text-black py-3.5 font-bold uppercase tracking-widest text-xs transition hover:brightness-110 disabled:opacity-55 active:scale-98 flex items-center justify-center gap-1.5"
+      >
+        <Send className="w-3.5 h-3.5" />
+        <span>Transmit Log Entry</span>
+      </button>
+    </form>
   );
 }

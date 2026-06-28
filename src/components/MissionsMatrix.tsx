@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { SpaceDestination } from "../types";
@@ -141,10 +139,10 @@ export default function MissionsMatrix() {
 
                   <button
                     onClick={() => setSelectedDestination(dest)}
-                    className="w-full py-3 border border-white/5 bg-space/60 hover:bg-cyber-cyan/10 hover:border-cyber-cyan/40 text-slate-300 hover:text-white font-mono text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full mt-4 bg-white/[0.03] border border-white/10 group-hover:border-cyber-cyan/35 p-3 font-mono text-[9px] uppercase tracking-[0.2em] hover:bg-cyber-cyan/5 transition-all duration-200 text-slate-300 hover:text-cyber-cyan flex items-center justify-center gap-2"
                   >
                     <Eye className="w-3.5 h-3.5" />
-                    Expand Coordinates
+                    Decode Telemetry Logs
                   </button>
                 </div>
               </motion.article>
@@ -153,91 +151,119 @@ export default function MissionsMatrix() {
         </div>
       </div>
 
-      {/* DETAILED DIALOG MODAL EXPANSION */}
+      {/* IMMERSIVE ADVANCED TELEMETRY MODAL DRAWER */}
       <AnimatePresence>
         {selectedDestination && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
-          >
+          <div className="fixed inset-0 z-50 flex items-center justify-end p-0 sm:p-4 bg-black/75 backdrop-blur-lg">
             <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="relative w-full max-w-3xl border border-white/10 bg-space-card/95 p-6 md:p-8 backdrop-blur-2xl shadow-cyan-glow overflow-y-auto max-h-[90vh]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedDestination(null)}
+              className="absolute inset-0"
+            />
+
+            <motion.article
+              initial={{ transform: "translateX(100%)" }}
+              animate={{ transform: "translateX(0%)" }}
+              exit={{ transform: "translateX(100%)" }}
+              transition={{ type: "spring", damping: 30, stiffness: 220 }}
+              className="relative w-full max-w-lg h-full sm:h-[90vh] bg-space-card/95 border-l border-white/10 sm:border border-white/10 shadow-2xl overflow-y-auto flex flex-col p-6 sm:p-8"
             >
-              <button
-                onClick={() => setSelectedDestination(null)}
-                className="absolute top-4 right-4 p-2 border border-white/10 hover:border-white/20 text-slate-400 hover:text-white transition-all cursor-pointer"
-                aria-label="Close coordinate panel"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              {/* Corner Cockpit Highlights */}
+              <div className="absolute top-0 left-0 w-6 h-[1px] bg-cyber-cyan" />
+              <div className="absolute top-0 left-0 w-[1px] h-6 bg-cyber-cyan" />
+              <div className="absolute bottom-0 right-0 w-6 h-[1px] bg-cyber-cyan" />
+              <div className="absolute bottom-0 right-0 w-[1px] h-6 bg-cyber-cyan" />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
-                <div className="relative h-64 md:h-full min-h-[220px] border border-white/5 overflow-hidden">
-                  <img
-                    src={selectedDestination.image}
-                    alt={selectedDestination.name}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover opacity-70"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-space-card via-transparent to-transparent" />
+              {/* Header drawer controls */}
+              <div className="flex justify-between items-center pb-4 border-b border-white/8 mb-6">
+                <div className="flex items-center gap-2">
+                  <Compass className="w-4 h-4 text-cyber-cyan animate-spin-slow" />
+                  <span className="font-mono text-[10px] tracking-[0.24em] text-slate-400 uppercase">CELESTIAL MAP LAYER</span>
                 </div>
+                <button
+                  onClick={() => setSelectedDestination(null)}
+                  className="p-1 border border-white/10 text-slate-400 hover:text-white transition"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
 
-                <div className="space-y-6">
-                  <div>
-                    <span className="font-mono text-[9px] text-cyber-cyan bg-cyber-cyan/5 border border-cyber-cyan/20 px-2.5 py-1 tracking-widest uppercase">
-                      Pathfinder Record Log
-                    </span>
-                    <h3 className="font-display text-3xl font-bold uppercase tracking-tight text-white mt-3">
-                      {selectedDestination.name}
-                    </h3>
-                    <p className="font-mono text-xs text-slate-500 uppercase mt-1">{selectedDestination.system}</p>
-                  </div>
-
-                  <p className="text-sm text-slate-350 leading-relaxed font-sans">
-                    {selectedDestination.description}
-                  </p>
-
-                  <div className="border-t border-b border-white/5 py-4 space-y-3 font-mono text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">COORDINATE MAPPING:</span>
-                      <span className="text-white font-semibold">{selectedDestination.coordinates}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">ATMOSPHERIC PROFILE:</span>
-                      <span className="text-slate-300 font-semibold uppercase">{selectedDestination.atmosphere}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">PLANETARY CLASSIFICATION:</span>
-                      <span className="text-slate-300 font-semibold uppercase">{selectedDestination.planetaryClass}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">DISTANCE TO BASE STATION:</span>
-                      <span className="text-white font-semibold uppercase">{selectedDestination.distance}</span>
-                    </div>
-                    <div className="flex justify-between items-baseline">
-                      <span className="text-slate-500">HAZARD INDEX STATUS:</span>
-                      <span className={`px-2 py-0.5 border text-[10px] font-bold ${hazardColors(selectedDestination.hazard)}`}>
-                        {selectedDestination.hazard}
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setSelectedDestination(null)}
-                    className="w-full py-3.5 bg-cyber-cyan text-black font-mono text-xs font-bold uppercase tracking-[0.2em] hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                  >
-                    Close Log View
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+              {/* Render Image */}
+              <div className="relative h-64 overflow-hidden border border-white/5 bg-black">
+                <img
+                  src={selectedDestination.image}
+                  alt={selectedDestination.name}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-space-card via-black/30 to-transparent" />
+                <div className="absolute bottom-4 left-4">
+                  <span className="font-mono text-[8px] text-cyber-cyan bg-cyber-cyan/10 border border-cyber-cyan/30 px-2 py-0.5 uppercase tracking-wider block w-max mb-1.5">
+                    {selectedDestination.planetaryClass}
+                  </span>
+                  <h3 className="font-display text-2xl font-extrabold uppercase text-white tracking-widest leading-none">
+                    {selectedDestination.name}
+                  </h3>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+
+              {/* Data specifications */}
+              <div className="mt-6 space-y-6 flex-1">
+                <div>
+                  <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-slate-500 block mb-2">GEOPHYSICAL MATRIX OVERVIEW</span>
+                  <p className="text-xs text-slate-300 leading-6">{selectedDestination.description}</p>
+                </div>
+
+                <div className="bg-black/40 border border-white/5 p-4 space-y-3.5 font-mono text-xs">
+                  <div className="flex justify-between border-b border-white/5 pb-2">
+                    <span className="text-slate-500">MAPPED SYSTEM ARC:</span>
+                    <span className="text-white font-bold">{selectedDestination.system}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-white/5 pb-2">
+                    <span className="text-slate-500">RADIAL DISTANCE RANGE:</span>
+                    <span className="text-cyber-cyan font-bold">{selectedDestination.distance}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-white/5 pb-2">
+                    <span className="text-slate-500">HOLOGRAPHIC COORD PLOTS:</span>
+                    <span className="text-slate-300 font-bold text-[10px]">{selectedDestination.coordinates}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-white/5 pb-2">
+                    <span className="text-slate-500">ATMOSPHERIC REACTION DECK:</span>
+                    <span className="text-slate-200 font-bold">{selectedDestination.atmosphere}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">TACTICAL HARVEST HAZARDS:</span>
+                    <span className={`font-bold px-2 py-0.5 border ${hazardColors(selectedDestination.hazard)}`}>
+                      {selectedDestination.hazard}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="border border-white/5 bg-slate-500/5 p-4 relative">
+                  <span className="font-mono text-[9px] text-hazard-gold tracking-widest uppercase block mb-1.5 flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    AUTONMEOUS LANDING INSTRUCTION
+                  </span>
+                  <p className="font-mono text-[9px] text-slate-400 leading-relaxed uppercase">
+                    FLIGHT DECK SYSTEM WARNINGS MUST BE SECURELY OVERRULED MANUALLY IN ADMIN DECK BEFORE PLOTTING AN ENTRY TRAJECTORY TOWARDS {selectedDestination.name}. ALL SHIELDS AT MAXIMUM.
+                  </p>
+                </div>
+              </div>
+
+              {/* Bottom footer button */}
+              <div className="pt-6 border-t border-white/8 mt-6">
+                <button
+                  onClick={() => setSelectedDestination(null)}
+                  className="w-full py-3.5 bg-cyber-cyan text-black text-xs font-bold uppercase tracking-[0.25em] transition hover:brightness-110 active:scale-98 flex items-center justify-center gap-2"
+                >
+                  <span>Lock Ship Vector</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </motion.article>
+          </div>
         )}
       </AnimatePresence>
     </section>
