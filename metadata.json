@@ -1,0 +1,6 @@
+{
+  "name": "Vanguard Astro",
+  "description": "Premium cinematic aerospace interface and Deep Space Command telemetry control deck.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
